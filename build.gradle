@@ -5,14 +5,21 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.google.guava:guava:23.0'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.4'
-    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.9.4'
+
+	configurations.all {
+  		exclude group: 'com.microsoft.azure', module: 'azure-keyvault'
+		/* 
+		* To prevent slf4j complaining about multiple logging implementations
+		* (and failing), trick gradle into providing only a single
+		* implmentation (logback).
+		*/
+		resolutionStrategy.dependencySubstitution {
+			substitute module('org.slf4j:slf4j-log4j12') with module('ch.qos.logback:logback-core:1.2.3')
+			substitute module('org.slf4j:log4j-over-slf4j') with module('ch.qos.logback:logback-core:1.2.3')
+		}
+	}
+
     implementation 'com.microsoft.sqlserver:mssql-jdbc:6.1.0.jre8'
-
-    implementation 'org.slf4j:slf4j-api:1.7.5'
-    implementation 'org.slf4j:slf4j-log4j12:1.7.5'
-
-    testImplementation 'junit:junit:4.12'
+    implementation 'io.dropwizard:dropwizard-core:1.3.5'
 }
 

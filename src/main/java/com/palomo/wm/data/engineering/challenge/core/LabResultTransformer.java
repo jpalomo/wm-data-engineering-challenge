@@ -1,17 +1,16 @@
-package com.palomo.wm.data.engineering.challenge;
+package com.palomo.wm.data.engineering.challenge.core;
 
 import java.io.File;
-
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Scanner;
 
-import org.apache.log4j.BasicConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.palomo.wm.data.engineering.challenge.EtlServiceConfiguration;
 import com.palomo.wm.data.engineering.challenge.api.LabResult;
 
 /**
@@ -23,26 +22,23 @@ import com.palomo.wm.data.engineering.challenge.api.LabResult;
 public class LabResultTransformer {
 
 	private static final Logger log = LoggerFactory.getLogger(LabResultTransformer.class);
-
 	private static final ObjectMapper MAPPER = new ObjectMapper();
-	public static final int RECORDS_PER_BATCH = 250000;
-	public static final int BATCHES_TO_PROCESS = Integer.MAX_VALUE;
 
-	public static final String INPUT_FILE = "C:\\Users\\jpalomo\\Desktop\\2018-08-29T01_36_17-file.txt\\2018-08-29T01_36_17-file.txt";
-	public static final String OUTPUT_DIR = "C:\\Users\\jpalomo\\Desktop\\wm_data";
+	private final EtlServiceConfiguration configuration;
 
-	public static void main(String args[]) throws IOException, InterruptedException {
-		BasicConfigurator.configure();
+	public LabResultTransformer(EtlServiceConfiguration configuration) throws IOException {
+		this.configuration = configuration;
+	}
 
-		LabResultTransformer labResultTransformer = new LabResultTransformer();
-
+	public void transform() throws IOException {
 		long start = System.currentTimeMillis();
 		log.info(String.format("started at [%d]", start));
 
 		// Create a print writer object to write to if any errors are encountered when
 		// processing a line of the input
-		try (PrintWriter errorWriter = new PrintWriter(new File(String.format("%s\\errors_output.txt", OUTPUT_DIR)))) {
-			labResultTransformer.transformToCsv(errorWriter);
+		try (PrintWriter errorWriter = new PrintWriter(new File(
+				String.format("%s\\%s.txt", configuration.getOutputDir(), configuration.getErrorFilePrefix())))) {
+			transformToCsv(errorWriter);
 		}
 
 		long stop = System.currentTimeMillis();
@@ -54,13 +50,13 @@ public class LabResultTransformer {
 		int linesProcessed = 0;
 		int processingErrors = 0;
 
-		try (Scanner scanner = new Scanner(new FileReader(new File(INPUT_FILE)))) {
+		try (Scanner scanner = new Scanner(new FileReader(new File(configuration.getInputFile())))) {
 			StringBuilder builder = new StringBuilder();
-			while (scanner.hasNextLine() && batch < BATCHES_TO_PROCESS) {
+			while (scanner.hasNextLine()) {
 				String line = null;
 				int noOfBatchRecords = 0;
 				while (scanner.hasNextLine() && (line = scanner.nextLine()) != null
-						&& noOfBatchRecords < RECORDS_PER_BATCH) {
+						&& noOfBatchRecords < configuration.getBatchSize()) {
 					linesProcessed++;
 					noOfBatchRecords++;
 					try {
@@ -75,8 +71,8 @@ public class LabResultTransformer {
 					}
 				}
 
-				try (PrintWriter printWriter = new PrintWriter(
-						new File(String.format("%s\\transformed_%d.txt", OUTPUT_DIR, batch)))) {
+				try (PrintWriter printWriter = new PrintWriter(new File(String.format("%s\\%s_%d.txt",
+						configuration.getOutputDir(), configuration.getOutputFilePrefix(), batch)))) {
 					printWriter.write(builder.toString().trim());
 					builder.setLength(0);
 					if (batch % 25 == 0) {
