@@ -1,4 +1,5 @@
-package errors;
+package com.palomo.wm.data.engineering.challenge;
+
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
@@ -15,12 +16,16 @@ import org.slf4j.LoggerFactory;
 import com.microsoft.sqlserver.jdbc.SQLServerBulkCSVFileRecord;
 import com.microsoft.sqlserver.jdbc.SQLServerBulkCopy;
 
-public class StagingLoader {
-	private static final Logger log = LoggerFactory.getLogger(StagingLoader.class);
+public class LabResultsLoader {
+	private static final Logger log = LoggerFactory.getLogger(LabResultsLoader.class);
 
-	Connection connection;
+	public static void main(String args[]) throws IOException, SQLException {
+		BasicConfigurator.configure();
+		String directory = "C:\\Users\\jpalomo\\Desktop\\wm_data";
+		new LabResultsLoader(directory);
+	}
 
-	public StagingLoader(String directory) throws IOException, SQLException {
+	public LabResultsLoader(String directory) throws IOException, SQLException {
 		bulkCopy(getBulkLoadFileNames(directory));
 	}
 
@@ -34,26 +39,20 @@ public class StagingLoader {
 			fileNames.add(fileName);
 		}
 		return fileNames;
-	}
-
-	public static void main(String args[]) throws IOException, SQLException {
-		BasicConfigurator.configure();
-		String directory = "C:\\Users\\jpalomo\\Desktop\\wm_data\\resolved";
-		StagingLoader loader = new StagingLoader(directory);
-	}
+	} 
 
 	private void bulkCopy(List<String> files) throws SQLException {
 		String connectionUrl = "jdbc:sqlserver://localhost\\mssqlsites:1435;databaseName=wm;user=sa;password=firesocket2002";
 
-		String destinationTable = "dbo.staging";
+		String destinationTable = "dbo.testresult";
 
 		try (Connection connection = DriverManager.getConnection(connectionUrl)) {
 			for (String filePath : files) {
-				if(filePath.contains("errors")) {
+				if (filePath.contains("errors")) {
 					continue;
 				}
 				long start = System.currentTimeMillis();
-				log.info(String.format("Processing file %s", filePath));
+				log.info(String.format("processing file %s", filePath));
 
 				try (Statement stmt = connection.createStatement();
 						SQLServerBulkCopy bulkCopy = new SQLServerBulkCopy(connection);
@@ -65,18 +64,18 @@ public class StagingLoader {
 					fileRecord.addColumnMetadata(5, "state", java.sql.Types.NVARCHAR, 255, 0);
 					fileRecord.addColumnMetadata(6, "tested_at", java.sql.Types.NVARCHAR, 255, 0);
 					fileRecord.addColumnMetadata(7, "expires_at", java.sql.Types.NVARCHAR, 255, 0);
-					fileRecord.addColumnMetadata(8, "thc", java.sql.Types.NVARCHAR, 255, 0);
-					fileRecord.addColumnMetadata(9, "thca", java.sql.Types.NVARCHAR, 255, 0);
-					fileRecord.addColumnMetadata(10, "cbd", java.sql.Types.NVARCHAR, 255, 0);
-					fileRecord.addColumnMetadata(11, "cbda", java.sql.Types.NVARCHAR, 255, 0);
+					fileRecord.addColumnMetadata(8, "thc", java.sql.Types.DECIMAL, 18, 2);
+					fileRecord.addColumnMetadata(9, "thca", java.sql.Types.DECIMAL, 18, 2);
+					fileRecord.addColumnMetadata(10, "cbd", java.sql.Types.DECIMAL, 18, 2);
+					fileRecord.addColumnMetadata(11, "cbda", java.sql.Types.DECIMAL, 18, 2);
+					fileRecord.addColumnMetadata(12, "potency", java.sql.Types.DECIMAL, 18, 2);
 
 					bulkCopy.setDestinationTableName(destinationTable);
 					bulkCopy.writeToServer(fileRecord);
 
-					log.info(String.format("processed file in [%d] ms", System.currentTimeMillis() -start));
+					log.info(String.format("processed file in [%d] ms", System.currentTimeMillis() - start));
 				}
 			}
 		}
 	}
-
 }
