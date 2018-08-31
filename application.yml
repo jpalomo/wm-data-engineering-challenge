@@ -1,0 +1,24 @@
+inputFile: C:\\Users\\jpalomo\\Desktop\\wm_dec\\sub2018-08-29T01_36_17-file.txt 
+outputDir: C:\\Users\\jpalomo\\Desktop\\wm_dec\\transformed
+jdbcConnectionUrl: jdbc:sqlserver://localhost:1435;databaseName=wm;user=sa;password=firesocket2002 
+destinationTable: dbo.testresult 
+outputFilePrefix: transformed 
+errorFilePrefix: errors
+batchSize: 250000
+doLoad: true
+
+server:
+  applicationConnectors:
+  - type: http
+    port: 8092
+  adminConnectors:
+  - type: http
+    port: 8093
+
+logging:
+  level: INFO
+  appenders:
+  - type: console
+    threshold: ALL
+    timeZone: UTC
+    target: stdout
