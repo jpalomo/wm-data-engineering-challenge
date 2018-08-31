@@ -1,17 +1,17 @@
-#WM Data Engineering Challenge
+# WM Data Engineering Challenge
 
-###Prerequisites
+### Prerequisites
 1. SQL Server
 2. Eclipse 
 
-###SQL Setup
+### SQL Setup
 1.  Create a database to house the data that will be transformed and loaded.
 2.  Using the database that was created, create the _testresult_ table by running the query found in the _queries\testresulttbl.sql_ file.
 
-###Update Configuration
+### Update Configuration
 1.  Update the _application.yml_ file with values to reflect your local system.
 
-###Run
+### Run
 1.  Update the _run configurations program arguments_ in Eclipse to include the following:
 
 ```
@@ -19,7 +19,7 @@ server application.yml
 ```
 2. Run the **com.palomo.wm.data.engineering.challenge.EtlService** class. 
 
-###Notes
+### Notes
 * Total records processed/transformed: 233,014,0496
 * Transformation process took ~1.25-1.5 hrs
 * Loading of the transformed records took ~0.5 hr
